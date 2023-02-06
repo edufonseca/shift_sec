@@ -1,7 +1,7 @@
 
 ## Improving Sound Event Classification by <br> Increasing Shift Invariance in Convolutional Neural Networks
 
-This repository will contain TensorFlow code for the experiments included in the following <a href="https://arxiv.org/abs/2107.00623" target="_blank">paper</a>. If you use this code or part of it, please cite:
+This repository contains the TensorFlow definition of the models and pooling mechanisms proposed in the following <a href="https://arxiv.org/abs/2107.00623" target="_blank">paper</a>. If you use this code or part of it, please cite:
 
 >Eduardo Fonseca, Andres Ferraro, Xavier Serra, "Improving Sound Event Classification by Increasing Shift Invariance in Convolutional Neural Networks", arXiv:2107.00623, 2021.
 

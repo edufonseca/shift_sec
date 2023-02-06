@@ -95,7 +95,7 @@ def pool_layer(x, pool_setup):
         # to summarize the final feature map information before the output classifier
         x = timefreq_pool(x, pool_size=size, stride=stride, tf_pool_mode=mode)
     elif mode == 'blur_pool_2D' or mode == 'blur_pool' or mode == 'avg_blur_pool_2D':
-        # TODO: meter info en pool_setup
+        # TODO: hardcoded for now, add info en pool_setup
         # Triangle [1, 2, 1]
         # x = MaxBlurPooling2D(pool_size=size, pool_stride=stride, kernel_size=3, pool_mode=mode)(x)
 
@@ -113,7 +113,7 @@ def pool_layer(x, pool_setup):
 
     elif mode == 'blur_pool_2D_learn':
         # aka TLPF
-        # TODO: meter info en pool_setup
+        # TODO: hardcoded for now, add info en pool_setup
 
         # Binomial-5 [1., 4., 6., 4., 1.]
         # x = MaxBlurPooling2D_learn(pool_size=size, pool_stride=stride, kernel_size=3, pool_mode=mode)(x)
@@ -123,6 +123,7 @@ def pool_layer(x, pool_setup):
 
 
     elif mode == 'ApsPool' or mode == 'ApsPool_learn':
+        # TODO: hardcoded for now, add info en pool_setup
 
         # kernel_size = 1     # no blur
         # kernel_size = 3     # combine APS with BlurPool 3x3 (fixed or learn, depending on 'ApsPool' or 'ApsPool_learn')
