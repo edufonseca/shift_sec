@@ -2,8 +2,11 @@ import tensorflow as tf
 from tensorflow.keras.layers import Layer
 import numpy as np
 
+# This file contains an implementation of Adaptive Polyphase Sampling (APS).
+
 # The following code is based on:
-# https://github.com/achaman2/truly_shift_invariant_cnns/blob/main/imagenet_exps/models_imagenet/aps_models/apspool.py
+# https://github.com/achaman2/truly_shift_invariant_cnns/
+
 
 ki = tf.random_normal_initializer(mean=0.0, stddev=0.01, seed=None)
 
@@ -86,7 +89,7 @@ class ApsPool(Layer):
                                      self.pool_stride,                                  # stride
                                      polyphase_indices,                                 # polyphase_indices = None
                                      permute_indices=self.permute_indices,              # None
-                                     apspool_criterion=self.apspool_criterion)          # l2
+                                     apspool_criterion=self.apspool_criterion)          # l1
 
         else:
             # we do blurring followed by APS
@@ -111,10 +114,10 @@ class ApsPool(Layer):
                                      self.pool_stride,                                  # stride
                                      polyphase_indices,                                 # polyphase_indices = None
                                      permute_indices=self.permute_indices,              # None
-                                     apspool_criterion=self.apspool_criterion)          # l2
+                                     apspool_criterion=self.apspool_criterion)          # l1
 
 
-def aps_downsample_v2(x, stride, polyphase_indices=None, permute_indices=None, apspool_criterion='l2'):
+def aps_downsample_v2(x, stride, polyphase_indices=None, permute_indices=None, apspool_criterion='l1'):
 
     if stride == 1:
         return x

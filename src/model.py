@@ -1,13 +1,17 @@
 import tensorflow as tf
 
 from tensorflow.keras.layers import Dense, Input, Conv2D, BatchNormalization, Flatten, \
-    Activation, Permute, Concatenate, Multiply, Reshape, GlobalAveragePooling2D, GlobalMaxPool2D, \
+    Activation, Reshape, GlobalAveragePooling2D, GlobalMaxPool2D, \
     MaxPool2D, AveragePooling2D, GlobalAveragePooling1D, GlobalMaxPool1D
 from tensorflow.keras import Model, layers
 from tensorflow.keras.regularizers import l2
 
 from lpf import MaxBlurPooling2D, MaxBlurPooling2D_learn
 from aps import ApsPool
+
+# This file contains implementations of VGG41 and VGG42, as well as simple pooling layers.
+# This file calls lpf.py and aps.py, which host the proposed pooling mechanisms to incentive
+# shift invariance in convolutional neural networks.
 
 
 """
@@ -53,19 +57,6 @@ def timefreq_pool(x, pool_size, stride, tf_pool_mode):
 
 
 def pool_layer(x, pool_setup):
-    """
-    pool_setup[0] can be:
-     - int: pooling over squared dimension expressed by single int
-     - tuple: pooling over rectangular dimension expressed by tuple
-
-    size = pool_setup[0]
-    stride = pool_setup[1]
-    mode = pool_setup[2]
-
-    :param x:
-    :param pool_setup:
-    :return:
-    """
 
     size = pool_setup[0]
     stride = pool_setup[1]
@@ -75,7 +66,7 @@ def pool_layer(x, pool_setup):
         # bypass
         x = x
 
-    # pooling between the convolutions within each block
+    # ====pooling between the convolutions within each block====
     elif mode == 'mp_invar':
         # Intra-block pooling (IBP): provide partial translation invariance w/o dim reduction.
         # used for beginning of backbone
@@ -84,7 +75,7 @@ def pool_layer(x, pool_setup):
         # same as before, with AveragePooling2D
         x = AveragePooling2D(pool_size=size, strides=stride, padding='same')(x)
 
-    # pooling between the convolutional blocks:
+    # ====pooling between the convolutional blocks====
     elif mode == 'mp_size_same_stride':
         # baseline: conventional pooling of size = stride
         x = MaxPool2D(pool_size=size, strides=size, padding='same')(x)
@@ -92,7 +83,7 @@ def pool_layer(x, pool_setup):
         # conventional pooling of size = stride
         x = AveragePooling2D(pool_size=size, strides=size, padding='same')(x)
     elif mode in ['tf_maxmeantime', 'tf_maxmeanfreq', 'tf_meanmaxfreq', 'tf_meanmaxtime']:
-        # to summarize the final feature map information before the output classifier
+        # temporal structure vs freq structure
         x = timefreq_pool(x, pool_size=size, stride=stride, tf_pool_mode=mode)
     elif mode == 'blur_pool_2D' or mode == 'blur_pool' or mode == 'avg_blur_pool_2D':
         # TODO: hardcoded for now, add info en pool_setup
@@ -112,7 +103,7 @@ def pool_layer(x, pool_setup):
         # x = MaxBlurPooling2D(pool_size=size, pool_stride=stride, kernel_size=7, pool_mode=mode)(x)
 
     elif mode == 'blur_pool_2D_learn':
-        # aka TLPF
+        # aka TLPF in the paper
         # TODO: hardcoded for now, add info en pool_setup
 
         # Binomial-5 [1., 4., 6., 4., 1.]
@@ -161,7 +152,6 @@ def conv_block(x, n_filt=64, pool1=(3, 1, None), pool2=(2, 2, 'mp_size_same_stri
 
     x = Conv2D(filters=n_filt, kernel_size=3, strides=1, padding='same', use_bias=False, kernel_initializer=ki)(x)
     # x = Conv2D(filters=n_filt, kernel_size=3, strides=1, padding='same', use_bias=False, kernel_initializer=ki, kernel_regularizer=l2(wd))(x)
-
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
 
@@ -180,16 +170,17 @@ def conv_block(x, n_filt=64, pool1=(3, 1, None), pool2=(2, 2, 'mp_size_same_stri
 
 def backbone(x, plearn):
 
-    # width factor
+    # width factor:
+    # 1: VGG41 - 1.3M
+    # 2: VGG42 - 4.9M
     k = plearn.get('width_factor')
 
-    # simple frontend
+    # ===simple frontend===
     x = Conv2D(32*k, kernel_size=3, padding='same', use_bias=False, kernel_initializer=ki)(x)
     # x = Conv2D(32*k, kernel_size=3, padding='same', use_bias=False, kernel_initializer=ki, kernel_regularizer=l2(wd))(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
 
-    # VGG41 - 1.3M and VGG42 - 4.9M
     # conv_block1============================
     x = conv_block(x, n_filt=48 * k, pool1=(plearn.get('trans_inv'), 1, plearn.get('bb_pool_1')), pool2=(2, 2, plearn.get('bb_pool_2')))
 
@@ -228,7 +219,7 @@ def backbone(x, plearn):
         freq_map = tf.reduce_max(x, axis=1)
         x = GlobalAveragePooling1D()(freq_map)
     elif plearn.get('global_pooling') == 'maxmeanfreq':
-        # best so far
+        # ===best so far===
         # mean freq pooling followed by max temporal pooling
         # (None, time, freq, channels)
         time_map = tf.reduce_mean(x, axis=2)

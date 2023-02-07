@@ -4,14 +4,18 @@ import tensorflow as tf
 from tensorflow.keras.layers import Layer
 import numpy as np
 
-ki = tf.random_normal_initializer(mean=0.0, stddev=0.01, seed=None)
+# This file contains implementations for BlurPool and Trainable Low-Pass Filters (TLPF).
 
 # The following code is based on:
-# https://github.com/adobe/antialiased-cnns/blob/master/antialiased_cnns/blurpool.py
-# https://github.com/vvigilante/antialiased-cnns-keras/blob/master/antialiasing.py
+# https://github.com/adobe/antialiased-cnns
+# https://github.com/vvigilante/antialiased-cnns-keras
 
+ki = tf.random_normal_initializer(mean=0.0, stddev=0.01, seed=None)
 
 class MaxBlurPooling2D(Layer):
+    """
+    This corresponds to BlurPool.
+    """
     def __init__(self, pool_size: int = 2, pool_stride: int = 2, kernel_size: int = 3, pool_mode: str = 'max', **kwargs):
         self.pool_size = pool_size
         self.pool_stride = pool_stride
@@ -88,6 +92,9 @@ class MaxBlurPooling2D(Layer):
 
 
 class MaxBlurPooling2D_learn(Layer):
+    """
+    This corresponds to TLPF in the paper.
+    """
     def __init__(self, pool_size: int = 2, pool_stride: int = 2, kernel_size: int = 3, pool_mode: str = 'max',
                  **kwargs):
         self.pool_size = pool_size
@@ -132,7 +139,7 @@ class MaxBlurPooling2D_learn(Layer):
         #                                    initializer=blur_init,
         #                                    trainable=True)
 
-        # # NonNeg()
+        # # NonNeg() constraint
         # self.blur_kernel = self.add_weight(name='blur_kernel_learn',
         #                                    shape=(self.kernel_size, self.kernel_size, input_shape[-1], 1),
         #                                    initializer=blur_init,
